@@ -1,11 +1,11 @@
 {
-  "name": "mcp-seo-audit-server",
+  "name": "pagespeed-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for comprehensive SEO audits - PageSpeed, Technical SEO, Sitemap/Robots, On-Page SEO, Security Headers, Mobile-Friendliness. Zero config required.",
+  "description": "MCP server for PageSpeed & SEO audits. Zero config required - works out of the box.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "mcp-seo-audit-server": "./dist/index.js"
+    "pagespeed-mcp-server": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
@@ -51,10 +51,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sofianbettayeb/mcp-seo-audit-server.git"
+    "url": "git+https://github.com/sofianbettayeb/pagespeed-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/sofianbettayeb/mcp-seo-audit-server/issues"
+    "url": "https://github.com/sofianbettayeb/pagespeed-mcp-server/issues"
   },
-  "homepage": "https://github.com/sofianbettayeb/mcp-seo-audit-server#readme"
+  "homepage": "https://github.com/sofianbettayeb/pagespeed-mcp-server#readme"
 }

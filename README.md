@@ -1,6 +1,6 @@
-# MCP SEO Audit Server
+# PageSpeed MCP Server
 
-A Model Context Protocol (MCP) server for comprehensive SEO audits. **Zero configuration required** - just install and use.
+A Model Context Protocol (MCP) server for PageSpeed & SEO audits. **Zero configuration required** - just install and use.
 
 ## Features
 
@@ -26,9 +26,9 @@ Add this to your Claude Desktop config:
 ```json
 {
   "mcpServers": {
-    "seo-audit": {
+    "pagespeed": {
       "command": "npx",
-      "args": ["-y", "mcp-seo-audit-server"]
+      "args": ["-y", "pagespeed-mcp-server"]
     }
   }
 }
@@ -97,9 +97,9 @@ The server works out of the box. For higher rate limits, add your own key:
 ```json
 {
   "mcpServers": {
-    "seo-audit": {
+    "pagespeed": {
       "command": "npx",
-      "args": ["-y", "mcp-seo-audit-server"],
+      "args": ["-y", "pagespeed-mcp-server"],
       "env": {
         "PAGESPEED_API_KEY": "your-api-key-here"
       }
@@ -114,6 +114,12 @@ Get a free API key at [Google Cloud Console](https://console.cloud.google.com/ap
 
 MIT
 
-## Author
+## About Me
 
-[Sofian Bettayeb](https://github.com/sofianbettayeb)
+I'm **Sofian Bettayeb**.
+
+By day, I'm a martech consultant, working with billion-dollar brands like Rolex and Helsana. By night, I build tools like **AI SEO Copilot** (15k+ installs), **AEO Copilot**, and blueprints like **Webflow SEO Checklist** (1k+ downloads) to help my Webflow friends make money with SEO and AEO.
+
+In between, I ride my bikes and play with my kids in Bern, Switzerland.
+
+[GitHub](https://github.com/sofianbettayeb)

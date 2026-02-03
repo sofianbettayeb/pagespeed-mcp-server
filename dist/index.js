@@ -11,7 +11,7 @@ import * as cheerio from 'cheerio';
 // ============================================
 // Default API key for PageSpeed Insights - works out of the box
 // Users can override with PAGESPEED_API_KEY env var for higher quotas
-const DEFAULT_API_KEY = "AIzaSyAOA_vkFN-XvCqMfPalXgvK6X-toL-dPzM";
+const DEFAULT_API_KEY = "AIzaSyCy_h1_YPQUKGMvLusmCJDZ_q9uoBbYnuU";
 function getApiKey() {
     // Priority: 1) Environment variable, 2) Default key
     return process.env.PAGESPEED_API_KEY || DEFAULT_API_KEY;
