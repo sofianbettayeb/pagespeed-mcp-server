@@ -1,33 +1,60 @@
 {
-  "name": "mcp-pagespeed-server",
-  "version": "1.0.2",
-  "description": "MCP server for performing PageSpeed Audits",
-  "main": "dist/index.js",
+  "name": "mcp-seo-audit-server",
+  "version": "1.0.0",
+  "description": "MCP server for comprehensive SEO audits - PageSpeed, Technical SEO, Sitemap/Robots, On-Page SEO, Security Headers, Mobile-Friendliness. Zero config required.",
   "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-seo-audit-server": "./dist/index.js"
+  },
   "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build"
+    "build": "tsc && chmod +x dist/index.js",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
-    "Model Context Protocol",
-    "SEO",
-    "Pagespeed",
-    "agentics",
-    "core web vitals"
+    "model-context-protocol",
+    "seo",
+    "pagespeed",
+    "core-web-vitals",
+    "technical-seo",
+    "sitemap",
+    "robots-txt",
+    "security-headers",
+    "on-page-seo",
+    "mobile-friendly",
+    "claude",
+    "ai"
   ],
-  "author": "Phiality",
+  "author": "Sofian Bettayeb <sofianbettayeb@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.0.1",
-    "glob": "^10.3.10",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "cheerio": "^1.0.0",
     "node-fetch": "^3.3.2",
+    "zod": "^3.23.0",
     "zod-to-json-schema": "^3.23.5"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "shx": "^0.3.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
-  }
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sofianbettayeb/mcp-seo-audit-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sofianbettayeb/mcp-seo-audit-server/issues"
+  },
+  "homepage": "https://github.com/sofianbettayeb/mcp-seo-audit-server#readme"
 }

@@ -1,206 +1,119 @@
-# PageSpeed MCP Server
-[![smithery badge](https://smithery.ai/badge/mcp-pagespeed-server)](https://smithery.ai/server/mcp-pagespeed-server)
+# MCP SEO Audit Server
 
-A Model Context Protocol (MCP) server that extends AI assistant capabilities with PageSpeed Insights functionality. This server acts as a bridge between AI models and Google's PageSpeed Insights API, enabling detailed performance analysis of websites.
+A Model Context Protocol (MCP) server for comprehensive SEO audits. **Zero configuration required** - just install and use.
 
-## Overview
+## Features
 
-The PageSpeed MCP server is designed to enhance AI assistants' capabilities by allowing them to perform comprehensive web performance analysis. When integrated, AI models can request and interpret detailed performance metrics, Core Web Vitals, and other critical web performance data for any given URL.
+7 powerful SEO audit tools:
 
-## Installation
+| Tool | Description |
+|------|-------------|
+| `run_pagespeed_test` | Full PageSpeed Insights data (performance, accessibility, SEO, best practices) |
+| `technical_seo_audit` | Meta tags, canonical URLs, hreflang, Open Graph, Twitter Cards, JSON-LD structured data |
+| `sitemap_robots_audit` | Validate sitemap.xml and robots.txt |
+| `onpage_seo_audit` | Heading structure, word count, internal/external links, images, keyword analysis |
+| `security_headers_audit` | HTTPS, HSTS, CSP, X-Frame-Options, and more |
+| `performance_audit` | Core Web Vitals summary with optimization opportunities |
+| `mobile_audit` | Mobile-friendliness: viewport, tap targets, font sizes, responsive images, PWA readiness |
 
-### Installing via Smithery
+## Quick Start
 
-To install PageSpeed Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/mcp-pagespeed-server):
+Add this to your Claude Desktop config:
 
-```bash
-npx -y @smithery/cli install mcp-pagespeed-server --client claude
-```
-
-### Manual Installation
-```bash
-npm install pagespeed-mcp-server
-```
-
-## Configuration
-
-Add the PageSpeed MCP to your AI assistant's(claude in this case) configuration file:
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
-    "pagespeed": {
-        "command": "node",
-        "args": ["path/to/mcp-pagespeed-server/dist/index.js"]
+  "mcpServers": {
+    "seo-audit": {
+      "command": "npx",
+      "args": ["-y", "mcp-seo-audit-server"]
     }
+  }
 }
 ```
 
-## Detailed Capabilities
+Restart Claude Desktop. That's it!
 
-### Performance Metrics Analysis
-- First Contentful Paint (FCP)
-- Largest Contentful Paint (LCP)
-- Time to Interactive (TTI)
-- Total Blocking Time (TBT)
-- Cumulative Layout Shift (CLS)
-- Speed Index
-- Time to First Byte (TTFB)
+## Example Prompts
 
-### Best Practices Assessment
-- HTTPS usage
-- JavaScript error monitoring
-- Browser console warnings
-- Deprecated API usage
-- Image aspect ratio analysis
-- Link security checks
+- "Run an SEO audit on https://example.com"
+- "Check the Core Web Vitals for my website"
+- "Is my site mobile-friendly?"
+- "Analyze https://mysite.com/blog for the keyword 'seo tips'"
+- "Check if my sitemap and robots.txt are configured correctly"
 
-### SEO Analysis
-- Meta description validation
-- Robots.txt validation
-- Structured data validation
-- Crawlable links verification
-- Meta tags assessment
-- Mobile friendliness
+## Tools
 
-### Accessibility Audits
-- ARIA attribute validation
-- Color contrast checking
-- Heading hierarchy analysis
-- Alt text verification
-- Focus management assessment
-- Keyboard navigation testing
+### `run_pagespeed_test`
+Full PageSpeed Insights API response with all Lighthouse data.
 
-### Resource Optimization
-- Image optimization suggestions
-- JavaScript bundling analysis
-- CSS optimization recommendations
-- Cache policy validation
-- Resource minification checks
-- Render-blocking resource identification
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `url` | string | required | URL to test |
+| `strategy` | string | `mobile` | `mobile` or `desktop` |
+| `category` | array | `['performance']` | Any of: `performance`, `accessibility`, `best-practices`, `pwa`, `seo` |
 
-## API Response Structure
+### `technical_seo_audit`
+Analyzes technical SEO elements.
 
-The MCP server provides detailed JSON responses including:
+**Checks:** Title tag, meta description, canonical URL, hreflang tags, Open Graph, Twitter Cards, JSON-LD structured data, viewport, language attribute.
 
-```javascript
-{
-    "lighthouseResult": {
-        "categories": {
-            "performance": { /* Performance metrics */ },
-            "accessibility": { /* Accessibility results */ },
-            "best-practices": { /* Best practices audit */ },
-            "seo": { /* SEO findings */ }
-        },
-        "audits": {
-            // Detailed audit results for each category
-        },
-        "timing": {
-            // Performance timing data
-        },
-        "stackPacks": {
-            // Technology-specific advice
-        }
-    }
-}
-```
+### `sitemap_robots_audit`
+Validates sitemap and robots.txt.
 
-## Advanced Usage
+**Checks:** robots.txt existence/content, sitemap references, sitemap.xml format, URL count.
 
-### Custom Configuration
-You can customize the PageSpeed analysis by providing additional parameters:
+### `onpage_seo_audit`
+Analyzes on-page SEO factors.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `url` | string | URL to analyze |
+| `targetKeyword` | string | Optional keyword to check optimization |
+
+**Checks:** Heading structure (H1-H6), word count, internal/external links, image alt text, keyword placement/density.
+
+### `security_headers_audit`
+Checks security headers.
+
+**Checks:** HTTPS, Strict-Transport-Security, Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy.
+
+### `performance_audit`
+Summarized performance report.
+
+**Returns:** Performance/Accessibility/SEO scores, Core Web Vitals (FCP, LCP, TBT, CLS), top optimization opportunities, overall grade (A-F).
+
+### `mobile_audit`
+Mobile-friendliness check.
+
+**Checks:** Viewport configuration, tap target sizes, font sizes, content width, responsive images, PWA elements (manifest, theme-color, touch icons).
+
+## Using Your Own API Key (Optional)
+
+The server works out of the box. For higher rate limits, add your own key:
 
 ```json
 {
-    "strategy": "mobile", // or "desktop"
-    "category": ["performance", "accessibility", "best-practices", "seo"],
-    "locale": "en",
-    "threshold": {
-        "performance": 90,
-        "accessibility": 100,
-        "best-practices": 90,
-        "seo": 90
+  "mcpServers": {
+    "seo-audit": {
+      "command": "npx",
+      "args": ["-y", "mcp-seo-audit-server"],
+      "env": {
+        "PAGESPEED_API_KEY": "your-api-key-here"
+      }
     }
+  }
 }
 ```
 
-### Error Handling
-The MCP server includes robust error handling for:
-- Invalid URLs
-- Network timeouts
-- API rate limiting
-- Invalid parameters
-- Server-side errors
-
-## Requirements
-
-
-### Network Requirements
-- Stable internet connection
-- Access to Google's PageSpeed Insights API
-
-### Platform Support
-- Windows (x64, x86)
-- Linux (x64)
-- macOS (x64, arm64)
-
-## Integration Examples
-
-### Basic Integration
-```javascript
-const PageSpeedMCP = require('pagespeed-mcp-server');
-const mcp = new PageSpeedMCP();
-
-await mcp.analyze('https://example.com');
-```
-
-### With Custom Options
-```javascript
-const results = await mcp.analyze('https://example.com', {
-    strategy: 'mobile',
-    categories: ['performance', 'accessibility'],
-    locale: 'en-US'
-});
-```
-
-## Troubleshooting
-
-### Common Issues
-1. Connection Timeouts
-   - Check internet connectivity
-
-2. API Rate Limiting
-   - Use API key for higher limits
-
-3. Memory Issues
-   - Adjust Node.js memory limits
-
-## Development
-
-### Building from Source
-```bash
-git clone https://github.com/phialsbasement/mcp-pagespeed-server
-cd mcp-pagespeed-server
-npm install
-npm run build
-```
-
-### Running Tests
-```bash
-npm run test
-```
-
-### Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## Support
-
-### Getting Help
-- GitHub Issues: Report bugs and feature requests
+Get a free API key at [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT
+
+## Author
+
+[Sofian Bettayeb](https://github.com/sofianbettayeb)
