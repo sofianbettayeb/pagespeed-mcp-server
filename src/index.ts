@@ -110,22 +110,125 @@ function getBaseUrl(url: string): string {
 // TOOL IMPLEMENTATIONS
 // ============================================
 
-// 1. PageSpeed Test (existing, with env var fix)
-async function runPageSpeedTest(params: z.infer<typeof RunPageSpeedTestSchema>) {
-    const { url, strategy, category, locale, apiKey: passedApiKey } = params;
-    const apiKey = passedApiKey || getApiKey();
+// 1. PageSpeed Test
+// The raw Lighthouse result is about 700,000 characters, far more than an MCP
+// client accepts in one tool reply. This returns what an agent acts on:
+// scores, lab and field Core Web Vitals, top opportunities and failing audits.
 
-    const categoriesParam = category.join('&category=');
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${strategy}&category=${categoriesParam}&locale=${locale}${apiKey ? `&key=${apiKey}` : ''}`;
+const LAB_METRICS: Record<string, string> = {
+    'first-contentful-paint': 'firstContentfulPaint',
+    'largest-contentful-paint': 'largestContentfulPaint',
+    'total-blocking-time': 'totalBlockingTime',
+    'cumulative-layout-shift': 'cumulativeLayoutShift',
+    'speed-index': 'speedIndex',
+    'interactive': 'timeToInteractive'
+};
 
-    const response = await fetch(apiUrl);
+const FIELD_METRICS: Record<string, string> = {
+    'LARGEST_CONTENTFUL_PAINT_MS': 'largestContentfulPaintMs',
+    'INTERACTION_TO_NEXT_PAINT': 'interactionToNextPaintMs',
+    'CUMULATIVE_LAYOUT_SHIFT_SCORE': 'cumulativeLayoutShift',
+    'FIRST_CONTENTFUL_PAINT_MS': 'firstContentfulPaintMs',
+    'EXPERIMENTAL_TIME_TO_FIRST_BYTE': 'timeToFirstByteMs'
+};
 
-    if (!response.ok) {
-        throw new Error(`PageSpeed API error: ${response.statusText}`);
+function summarizeFieldData(experience: any) {
+    if (!experience?.metrics) return null;
+    const metrics: Record<string, { p75: number; rating: string }> = {};
+    for (const [key, label] of Object.entries(FIELD_METRICS)) {
+        const m = experience.metrics[key];
+        if (!m) continue;
+        // CLS comes back multiplied by 100
+        const p75 = key === 'CUMULATIVE_LAYOUT_SHIFT_SCORE' ? m.percentile / 100 : m.percentile;
+        metrics[label] = { p75, rating: m.category };
+    }
+    return { overall: experience.overall_category || 'N/A', metrics };
+}
+
+export function summarizePageSpeed(data: any, url: string, strategy: string) {
+    const lh = data?.lighthouseResult || {};
+    const audits: Record<string, any> = lh.audits || {};
+
+    const scores: Record<string, number> = {};
+    for (const [id, cat] of Object.entries(lh.categories || {}) as [string, any][]) {
+        scores[id] = Math.round((cat?.score || 0) * 100);
     }
 
-    const data = await response.json();
-    return data;
+    const labMetrics: Record<string, string> = {};
+    for (const [id, label] of Object.entries(LAB_METRICS)) {
+        if (audits[id]?.displayValue) labMetrics[label] = audits[id].displayValue;
+    }
+
+    const opportunities = Object.values(audits)
+        .filter((a: any) => a?.details?.overallSavingsMs > 0)
+        .sort((a: any, b: any) => b.details.overallSavingsMs - a.details.overallSavingsMs)
+        .slice(0, 8)
+        .map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            savingsMs: Math.round(a.details.overallSavingsMs),
+            ...(a.displayValue ? { detail: a.displayValue } : {})
+        }));
+
+    // Weighted audits that fail, per category, so the agent knows what to fix
+    const failingAudits: Record<string, Array<{ id: string; title: string; score: number }>> = {};
+    for (const [catId, cat] of Object.entries(lh.categories || {}) as [string, any][]) {
+        const failing = (cat?.auditRefs || [])
+            .filter((ref: any) => ref.weight > 0)
+            .map((ref: any) => audits[ref.id])
+            .filter((a: any) => a && a.score !== null && a.score < 0.9)
+            .slice(0, 10)
+            .map((a: any) => ({ id: a.id, title: a.title, score: Math.round(a.score * 100) }));
+        if (failing.length) failingAudits[catId] = failing;
+    }
+
+    return {
+        url,
+        finalUrl: lh.finalDisplayedUrl || lh.finalUrl || url,
+        strategy,
+        fetchTime: lh.fetchTime,
+        scores,
+        labMetrics,
+        fieldData: {
+            page: summarizeFieldData(data?.loadingExperience),
+            origin: summarizeFieldData(data?.originLoadingExperience)
+        },
+        topOpportunities: opportunities,
+        failingAudits,
+        ...(lh.runWarnings?.length ? { warnings: lh.runWarnings } : {})
+    };
+}
+
+// Calls the PageSpeed Insights API and turns quota or key errors into a message
+// that tells the user what to do.
+async function fetchPageSpeed(url: string, strategy: string, categories: string[], extra = '', keyOverride?: string) {
+    const apiKey = keyOverride || getApiKey();
+    const categoriesParam = categories.map((c) => `&category=${c}`).join('');
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${strategy}${categoriesParam}${extra}${apiKey ? `&key=${apiKey}` : ''}`;
+
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+        let detail = response.statusText;
+        try {
+            const body: any = await response.json();
+            detail = body?.error?.message || detail;
+        } catch { /* keep statusText */ }
+        if (response.status === 429 || /quota/i.test(detail)) {
+            throw new Error(
+                `PageSpeed API quota reached (${detail}). The built-in key is shared by every user of this server. ` +
+                `Create your own free key at https://developers.google.com/speed/docs/insights/v5/get-started ` +
+                `and set it as PAGESPEED_API_KEY, for example: claude mcp add pagespeed -s user -e PAGESPEED_API_KEY=your_key -- npx -y pagespeed-mcp-server`
+            );
+        }
+        throw new Error(`PageSpeed API error ${response.status}: ${detail}`);
+    }
+    return response.json();
+}
+
+async function runPageSpeedTest(params: z.infer<typeof RunPageSpeedTestSchema>) {
+    const { url, strategy, category, locale, apiKey } = params;
+    const data = await fetchPageSpeed(url, strategy, category, `&locale=${locale}`, apiKey);
+    return summarizePageSpeed(data, url, strategy);
 }
 
 // 2. Technical SEO Audit
@@ -625,19 +728,7 @@ async function runSecurityHeadersAudit(params: z.infer<typeof SecurityHeadersSch
 // 6. Performance Audit Summary (simplified PageSpeed results)
 async function runPerformanceAudit(params: z.infer<typeof PerformanceAuditSchema>) {
     const { url, strategy } = params;
-    const apiKey = getApiKey();
-
-    const categories = ['performance', 'accessibility', 'best-practices', 'seo'];
-    const categoriesParam = categories.join('&category=');
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${strategy}&category=${categoriesParam}${apiKey ? `&key=${apiKey}` : ''}`;
-
-    const response = await fetch(apiUrl);
-
-    if (!response.ok) {
-        throw new Error(`PageSpeed API error: ${response.statusText}`);
-    }
-
-    const data: any = await response.json();
+    const data: any = await fetchPageSpeed(url, strategy, ['performance', 'accessibility', 'best-practices', 'seo']);
     const lighthouse = data.lighthouseResult;
 
     // Extract key metrics
@@ -881,7 +972,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         tools: [
             {
                 name: "run_pagespeed_test",
-                description: "Run a full PageSpeed Insights test on a URL. Returns detailed performance, accessibility, SEO, and best practices data.",
+                description: "Run a PageSpeed Insights test on a URL. Returns a compact summary: category scores, lab Core Web Vitals, real-user field data (page and origin), top opportunities with savings, and failing audits per category.",
                 inputSchema: zodToJsonSchema(RunPageSpeedTestSchema),
             },
             {
@@ -994,7 +1085,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function runServer() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("SEO Audit Server v2.0 running on stdio");
+    console.error("SEO Audit Server v2.1 running on stdio");
 }
 
 runServer().catch((error) => {
