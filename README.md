@@ -8,7 +8,7 @@ A Model Context Protocol (MCP) server for PageSpeed & SEO audits. **Zero configu
 
 | Tool | Description |
 |------|-------------|
-| `run_pagespeed_test` | Full PageSpeed Insights data (performance, accessibility, SEO, best practices) |
+| `run_pagespeed_test` | PageSpeed Insights summary: scores, Core Web Vitals (lab and field), top opportunities, failing audits |
 | `technical_seo_audit` | Meta tags, canonical URLs, hreflang, Open Graph, Twitter Cards, JSON-LD structured data |
 | `sitemap_robots_audit` | Validate sitemap.xml and robots.txt |
 | `onpage_seo_audit` | Heading structure, word count, internal/external links, images, keyword analysis |
@@ -47,7 +47,7 @@ Restart Claude Desktop. That's it!
 ## Tools
 
 ### `run_pagespeed_test`
-Full PageSpeed Insights API response with all Lighthouse data.
+A compact summary of the PageSpeed Insights result, about 1,500 characters: category scores, lab Core Web Vitals, real-user field data for the page and origin, top opportunities with estimated savings, and failing audits per category. The raw Lighthouse response is about 700,000 characters, more than MCP clients accept in one reply, so it is no longer returned.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -92,7 +92,15 @@ Mobile-friendliness check.
 
 ## Using Your Own API Key (Optional)
 
-The server works out of the box. For higher rate limits, add your own key:
+The server works out of the box with a built-in key that every user shares. If you hit its quota, the error tells you so. Add your own free key for your own quota.
+
+Claude Code:
+
+```bash
+claude mcp add pagespeed -s user -e PAGESPEED_API_KEY=your_key -- npx -y pagespeed-mcp-server
+```
+
+Claude Desktop:
 
 ```json
 {
@@ -108,7 +116,7 @@ The server works out of the box. For higher rate limits, add your own key:
 }
 ```
 
-Get a free API key at [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+Get a free API key from [Google's PageSpeed Insights guide](https://developers.google.com/speed/docs/insights/v5/get-started), or in [Google Cloud Console](https://console.cloud.google.com/apis/credentials) with the PageSpeed Insights API enabled.
 
 ## License
 
